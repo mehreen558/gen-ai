@@ -13,19 +13,6 @@ PAGE_NUM_RE = re.compile(r"^\s*\d{1,3}\s*$")
 
 
 def strip_header_footer(page_text, lookahead_lines=5):
-    """
-    Remove the repeating running header ('The EUROCALL Review, Volume 25,
-    No. 2, September 2017') and the page-number footer from a page's raw
-    extracted text.
-
-    pypdf preserves the PDF's internal content-stream order, not visual
-    top-to-bottom order, so on this document both the header line and the
-    footer page number actually show up together near the TOP of each
-    page's extracted text (confirmed by inspection), not at the very end.
-    Only digit-only lines within the first few lines are treated as the
-    footer, so a genuine standalone number later in the body (e.g. inside
-    a list or citation) is never touched.
-    """
     lines = page_text.split("\n")
     cleaned = []
     for i, line in enumerate(lines):
@@ -47,11 +34,6 @@ def extract_text(pdf_path):
 
 
 def extract_real_tables(pdf_path, min_cols=3, min_rows=3):
-    """
-    pdfplumber flags almost every text block as a 1-column 'table', so we
-    filter for genuine multi-column tables only. Returns a list of
-    {page, header, rows} dicts, one per detected table.
-    """
     tables = []
     with pdfplumber.open(pdf_path) as pdf:
         for page_num, page in enumerate(pdf.pages, start=1):
@@ -67,9 +49,6 @@ def extract_real_tables(pdf_path, min_cols=3, min_rows=3):
 
 
 def table_to_markdown(rows, header):
-    """Render a list of {col: value} row-dicts as a Markdown table string.
-    (Utility kept for optional debugging/printing; not used in the main
-    per-row chunking pipeline below.)"""
     cols = list(header)
     lines = ["| " + " | ".join(cols) + " |",
              "|" + "|".join(["---"] * len(cols)) + "|"]
@@ -79,19 +58,6 @@ def table_to_markdown(rows, header):
 
 
 def build_table1_chunks(pdf_path):
-    """
-    Table 1 ('The students' mobile devices usage descriptions') is hand-parsed
-    here because it spans two PDF pages and has a merged/rotated header that
-    generic table detection can't cleanly label.
-
-    Produces ONE CHUNK PER STUDENT ROW (not per page/table). Cramming all 7-13
-    rows of a page into a single chunk dilutes a specific student's signal in
-    TF-IDF (shared words like "female"/"smartphone" across many rows drown out
-    the one row that actually answers a targeted query like "what did S14
-    use?"). A per-row chunk keeps each student's data as its own precise,
-    self-contained, retrievable unit — while still spelling out every column
-    label so meaning isn't lost outside table structure.
-    """
     raw_tables = extract_real_tables(pdf_path)
 
     chunks = []
@@ -122,7 +88,6 @@ def build_table1_chunks(pdf_path):
 
 
 def chunk_text(pages, chunk_size=80, overlap=60):
-    """Chunk by words, with overlap, keeping track of source page."""
     chunks = []
     for page_num, text in enumerate(pages, start=1):
         text = re.sub(r"\s+", " ", text).strip()
