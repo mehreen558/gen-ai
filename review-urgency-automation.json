@@ -1,0 +1,289 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1hBcmIq_2H2cBJKSSqOZggbNEHlKV8UPhxBB30sC7ePc",
+          "mode": "list",
+          "cachedResultName": "Responses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hBcmIq_2H2cBJKSSqOZggbNEHlKV8UPhxBB30sC7ePc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 346342122,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hBcmIq_2H2cBJKSSqOZggbNEHlKV8UPhxBB30sC7ePc/edit#gid=346342122"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "16904ad6-583a-4ddc-9674-2f4f03908cf9",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "JKVSkrNCKZMFwosS",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-oss-120b\",\n  \"temperature\": 0,\n  \"max_tokens\": 200,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You extract structured data from customer support messages. You MUST respond with ONLY valid JSON matching this schema: {\\\"issue_type\\\": one of [\\\"billing\\\",\\\"technical\\\",\\\"account\\\",\\\"product\\\",\\\"other\\\"], \\\"urgency\\\": one of [\\\"low\\\",\\\"medium\\\",\\\"high\\\"]}. Output ONLY the JSON object, no explanations, no markdown fences.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Message: {{ $json.Message }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "33e7b1c0-8ed1-4d40-8ccf-032aca2f653c",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f7c9922f-1082-49d6-9c3e-c93a3408b254",
+              "name": "name",
+              "value": "=\t{{ $('Google Sheets Trigger').item.json.Name }}",
+              "type": "string"
+            },
+            {
+              "id": "7bfccb19-8e18-4737-b1c4-fb2976222a5e",
+              "name": "email",
+              "value": "=\t{{ $('Google Sheets Trigger').item.json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "a180df7f-6603-4632-bca1-650ace6ff7ce",
+              "name": "message",
+              "value": "=\t{{ $('Google Sheets Trigger').item.json.Message }}",
+              "type": "string"
+            },
+            {
+              "id": "32535700-7859-4a15-8f0b-eb00c51d1e47",
+              "name": "issue_type",
+              "value": "=\t{{ JSON.parse($json.choices[0].message.content).issue_type }}",
+              "type": "string"
+            },
+            {
+              "id": "ae179bd2-96fb-4ef9-a636-4da7e968a600",
+              "name": "urgency",
+              "value": "=\t{{ JSON.parse($json.choices[0].message.content).urgency }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "284391bd-c8cf-41ac-bfc5-b956bbc89cef",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1hBcmIq_2H2cBJKSSqOZggbNEHlKV8UPhxBB30sC7ePc",
+          "mode": "list",
+          "cachedResultName": "Responses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hBcmIq_2H2cBJKSSqOZggbNEHlKV8UPhxBB30sC7ePc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 346342122,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hBcmIq_2H2cBJKSSqOZggbNEHlKV8UPhxBB30sC7ePc/edit#gid=346342122"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Google Sheets Trigger').item.json.Timestamp }}",
+            "Name": "=\t{{ $('Google Sheets Trigger').item.json.Name }}",
+            "Email": "=\t{{ $('Google Sheets Trigger').item.json.Email }}",
+            "Message": "=\t{{ $('Google Sheets Trigger').item.json.Message }}",
+            "Issue_Type": "={{ $json.issue_type }}",
+            "Urgency": "={{ $json.urgency }}"
+          },
+          "matchingColumns": [
+            "Timestamp"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Issue_Type",
+              "displayName": "Issue_Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        0
+      ],
+      "id": "976dd392-5ce8-442a-9e19-89f9dc920f5b",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "O5GxP8XQrZMS5v1q",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "494cf7c9-7dcc-471c-a5f0-4666ce910fca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bf0afe6c364063b82b97b7020f69ffbafa0bd6bf2fd6dcb16aaeec5945cc544b"
+  },
+  "nodeGroups": [],
+  "id": "oQr2sgcR1UTp8wMq",
+  "tags": []
+}
